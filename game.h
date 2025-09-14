@@ -5,6 +5,8 @@
 using namespace std;
 
 void showCharacterInfo(Player& player);
+void showBackpack(Player& player);
+void temple(Player& player);
 void gameMenu(Player& player);
 void begin();
 void fight(Player& player);

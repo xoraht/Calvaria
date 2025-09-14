@@ -221,5 +221,4 @@ Monster Monster::getBossForLevel(int level) {
     for (const auto& boss : bosses) {
         if (boss.level == level) return boss;
     }
-    return Monster("Unknown Boss", level, level * 50, level * 5, level * 2, level * 100);
 }

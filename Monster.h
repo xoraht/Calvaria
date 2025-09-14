@@ -12,6 +12,5 @@ public:
 
     static vector<Monster> getMonstersForLevel(int playerLevel);
     static Monster getRandomMonster(int playerLevel);
-
     static Monster getBossForLevel(int level);
 };

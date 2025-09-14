@@ -1,4 +1,5 @@
 #pragma once
+#include <iostream>
 #include <string>
 using namespace std;
 
@@ -12,5 +13,4 @@ public:
     int armor;
 
     Character(const string& name, int level, int maxHP, int attack, int armor);
-    virtual ~Character() = default;
 };
