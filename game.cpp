@@ -12,10 +12,9 @@
 #include "Item.h"
 using namespace std;
 
-// --- GLOBALS ---
 map<int, vector<Item>> shopInventory;
+HANDLE color = GetStdHandle(STD_OUTPUT_HANDLE);
 
-// --- UTILITY ---
 string getAttackName(Profession prof) {
     switch (prof) {
         case Profession::Warrior: return "Sword Slash";
@@ -126,28 +125,34 @@ vector<Item> getShopItemsForLevel(int level) {
     return items;
 }
 
-// --- UI & GAME LOGIC ---
 
 void showCharacterInfo(Player& player) {
-    HANDLE color = GetStdHandle(STD_OUTPUT_HANDLE);
     system("cls");
-    SetConsoleTextAttribute(color, 15);
+    SetConsoleTextAttribute(color, 14);
     cout << endl << setw(50) << "~~~~~~~~~~~~ Character Information ~~~~~~~~~~~~" << endl << endl;
+    SetConsoleTextAttribute(color, 15);
     cout << setw(9) << "Name: " << player.name << endl;
+    SetConsoleTextAttribute(color, 7);
     cout << setw(10) << "Level: " << player.level << " | " << player.exp << " / " << player.expToNextLevel << endl;
+    SetConsoleTextAttribute(color, 10);
     cout << setw(11) << "Health: " << player.hp << "/" << player.maxHP << endl;
+    SetConsoleTextAttribute(color, 12);
     cout << setw(11) << "Attack: " << player.attack << endl;
+	SetConsoleTextAttribute(color, 11);
     cout << setw(10) << "Armor: " << player.armor << endl;
+    SetConsoleTextAttribute(color, 6);
     cout << setw(9) << "Gold: " << player.gold << endl;
 
-    cout << endl << setw(50) << "~~~~~~~~~~~~~~~~ Your Equipment ~~~~~~~~~~~~~~~~" << endl << endl;
+    SetConsoleTextAttribute(color, 14);
+    cout << endl << setw(50) << "~~~~~~~~~~~~~~~ Your Equipment ~~~~~~~~~~~~~~~~" << endl << endl;
+    SetConsoleTextAttribute(color, 15);
     cout << setw(15) << "[1] Weapon: " << (player.weapon && player.weapon->equipped ? player.weapon->name : "None") << endl;
     cout << setw(15) << "[2] Helmet: " << (player.helmet && player.helmet->equipped ? player.helmet->name : "None") << endl;
     cout << setw(14) << "[3] Armor: " << (player.armorItem && player.armorItem->equipped ? player.armorItem->name : "None") << endl;
     cout << setw(14) << "[4] Pants: " << (player.pants && player.pants->equipped ? player.pants->name : "None") << endl;
     cout << setw(14) << "[5] Boots: " << (player.boots && player.boots->equipped ? player.boots->name : "None") << endl;
-
-    cout << endl << "Select item number to unequip or ESC to return..." << endl;
+    SetConsoleTextAttribute(color, 7);
+    cout << endl << setw(23) << "Press [ESC] to back." << endl;
     char key = _getch();
     if (key == 27) {
         system("cls");
@@ -157,7 +162,8 @@ void showCharacterInfo(Player& player) {
     if (idx >= 0 && idx < 5) {
         ItemType type = static_cast<ItemType>(idx);
         player.removeEquipment(type);
-        cout << endl << setw(50) << "Item unequipped!" << endl;
+        SetConsoleTextAttribute(color, 10);
+        cout << endl << setw(19) << "Item unequipped!" << endl;
         (void)_getch();
     }
     system("cls");
@@ -165,16 +171,19 @@ void showCharacterInfo(Player& player) {
 
 void showBackpack(Player& player) {
     system("cls");
-    cout << endl << setw(50) << "~~~~~~~~~~~~~~~~~~ Backpack ~~~~~~~~~~~~~~~~~~" << endl << endl;
+    SetConsoleTextAttribute(color, 14);
+    cout << endl << setw(50) << "~~~~~~~~~~~~~~~~~~ Backpack ~~~~~~~~~~~~~~~~~~~" << endl << endl;
     int count = 0;
-    for (size_t i = 0; i < player.backpack.size(); ++i) {
+    SetConsoleTextAttribute(color, 15);
+    for (size_t i = 0; i < player.backpack.size(); i++) {
         if (!player.backpack[i].equipped) {
-            cout << "[" << count + 1 << "] " << player.backpack[i].name << endl;
+            cout << setw(4) << "[" << count + 1 << "] " << player.backpack[i].name << endl;
             count++;
         }
     }
-    if (count == 0) cout  << setw(14) << "Nothing..." << endl;
-    cout << endl << "Select item number to equip or [ESC] to return..." << endl;
+    if (count == 0) cout  << setw(13) << "Nothing..." << endl;
+    SetConsoleTextAttribute(color, 7);
+    cout << endl << setw(23) << "Press [ESC] to back." << endl;
     char key = _getch();
     if (key == 27 || count == 0) {
         system("cls");
@@ -183,7 +192,7 @@ void showBackpack(Player& player) {
     int idx = key - '1';
     size_t realIdx = static_cast<size_t>(-1);
     count = 0;
-    for (size_t i = 0; i < player.backpack.size(); ++i) {
+    for (size_t i = 0; i < player.backpack.size(); i++) {
         if (!player.backpack[i].equipped) {
             if (count == idx) {
                 realIdx = i;
@@ -194,7 +203,8 @@ void showBackpack(Player& player) {
     }
     if (realIdx != static_cast<size_t>(-1)) {
         player.equip(&player.backpack[realIdx]);
-        cout << "Equipped " << player.backpack[realIdx].name << "!" << endl;
+        SetConsoleTextAttribute(color, 10);
+        cout << endl << setw(12) << "Equipped " << player.backpack[realIdx].name << "!" << endl;
         (void)_getch();
     }
     system("cls");
@@ -212,25 +222,35 @@ void fight(Player& player) {
         monster = Monster::getRandomMonster(player.level);
     }
 
-    string battleLog = "The fight has begun!\nYou face " + monster.name + ".";
+    string battleLog = "The fight has begun! You face " + monster.name + ".";
     bool escaped = false;
 
     while (player.hp > 0 && monster.hp > 0 && !escaped) {
         system("cls");
-        cout << "Your stats:" << endl;
-        cout << "HP: " << player.hp << "/" << player.maxHP << "   Attack: " << player.attack << "   Armor: " << player.armor << endl;
-        cout << "Enemy: " << monster.name << endl;
-        cout << "HP: " << monster.hp << "/" << monster.maxHP << "   Attack: " << monster.attack << "   Armor: " << monster.armor << endl;
-        cout << "--------------------------------------------------" << endl;
-        cout << battleLog << endl;
-        cout << "--------------------------------------------------" << endl;
-        cout << "[A] " << getAttackName(player.profession) << "   [E] Escape" << endl;
+        SetConsoleTextAttribute(color, 14);
+        cout << endl << setw(18) << "~~~~~~~~~~~~~~ " << player.name << " VS " << monster.name << " ~~~~~~~~~~~~~~" << endl << endl;
+        SetConsoleTextAttribute(color, 15);
+        cout << setw(19) << "Your Statistics:" << endl;
+        SetConsoleTextAttribute(color, 10);
+        cout << setw(11) << "Health: " << player.hp << "/" << player.maxHP << "   Attack: " << player.attack << "   Armor: " << player.armor << endl;
+        SetConsoleTextAttribute(color, 15);
+        cout << setw(21) << "Enemy Statistics: " << endl;
+        SetConsoleTextAttribute(color, 12);
+        cout << setw(11) << "Health: " << monster.hp << "/" << monster.maxHP << "   Attack: " << monster.attack << "   Armor: " << monster.armor << endl;
+        SetConsoleTextAttribute(color, 14);
+        cout << setw(47) << endl << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" << endl;
+        SetConsoleTextAttribute(color, 15);
+        cout << setw(42) << battleLog << endl;
+        SetConsoleTextAttribute(color, 14);
+        cout << setw(47) << "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~" << endl;
+        SetConsoleTextAttribute(color, 13);
+        cout << setw(7) << "[A] " << getAttackName(player.profession) << "   [E] Escape" << endl;
 
         int skillKeyOffset = 1;
-        for (size_t i = 0; i < player.skills.size(); ++i) {
+        for (size_t i = 0; i < player.skills.size(); i++) {
             const Skill& skill = player.skills[i];
             if (skill.unlocked && !skill.usedInBattle) {
-                cout << "[" << (char)('1' + i) << "] Use skill: " << skill.name << endl;
+                cout << setw(4) << "[" << (char)('1' + i) << "] Use skill: " << skill.name << endl;
             }
         }
 
@@ -321,26 +341,30 @@ void fight(Player& player) {
     }
 
     system("cls");
+    SetConsoleTextAttribute(color, 14);
+	cout << endl << setw(50) << "~~~~~~~~~~~~~~~~ Battle Result ~~~~~~~~~~~~~~~~" << endl << endl;
     if (escaped) {
-        cout << "You escaped from the fight!" << endl;
+        SetConsoleTextAttribute(color, 15);
+        cout << setw(30) << "You escaped from the fight!" << endl;
     } else if (player.hp <= 0) {
-        cout << "You were defeated by the " << monster.name << "..." << endl;
+		SetConsoleTextAttribute(color, 12);
+        cout << setw(28) << "You were defeated by the " << monster.name << "..." << endl;
     } else if (monster.hp <= 0) {
-        cout << "You defeated the " << monster.name << "!" << endl;
+        SetConsoleTextAttribute(color, 10);
+        cout << setw(20) << "You defeated the " << monster.name << "!" << endl;
         player.addExperience(monster.experience);
-        cout << "You gained " << monster.experience << " experience!" << endl;
-        player.addGold(monster.level * 5);
-        cout << "You gained " << monster.level * 5 << " gold!" << endl;
+        SetConsoleTextAttribute(color, 11);
+        cout << setw(14) << "You gained " << monster.experience << " experience!" << endl;
+        SetConsoleTextAttribute(color, 6);
+        player.addGold(monster.level);
+        cout << setw(14) << "You gained " << monster.level << " gold!" << endl;
     }
-
     if (isBossLevel && !bossAlreadyAttempted) {
         player.bossDefeatedLevel = player.level;
     }
-
     player.hp = player.maxHP;
-
-    cout << endl << "Your HP has been restored!" << endl;
-    cout << "Press ESC to return to game menu..." << endl;
+    SetConsoleTextAttribute(color, 7);
+    cout << endl << setw(23) << "Press [ESC] to back." << endl;
     while (_getch() != 27) {}
     system("cls");
 }
@@ -355,29 +379,38 @@ void shop(Player& player) {
 
     while (true) {
         system("cls");
-        cout << "Shop" << endl << "---------------------" << endl;
-        cout << "Your gold: " << player.gold << endl;
-        cout << "[B] Buy items" << endl;
-        cout << "[S] Sell items" << endl;
-        cout << "[ESC] Exit shop" << endl;
+        SetConsoleTextAttribute(color, 14);
+        cout << endl << setw(50) << "~~~~~~~~~~~~~~~~~~~~ SHOP ~~~~~~~~~~~~~~~~~~~~" << endl << endl;
+        SetConsoleTextAttribute(color, 10);
+        cout << setw(17) << "[B] Buy items" << endl;
+        SetConsoleTextAttribute(color, 12);
+        cout << setw(18) << "[S] Sell items" << endl << endl;
+        SetConsoleTextAttribute(color, 7);
+        cout << setw(19) << "[ESC] Exit shop" << endl;
         char key = _getch();
         if (key == 27) break;
 
         if (key == 'b' || key == 'B') {
             while (true) {
                 system("cls");
-                cout << "Shop - Buy" << endl << "---------------------" << endl;
-                cout << "Your gold: " << player.gold << endl;
+                SetConsoleTextAttribute(color, 14);
+                cout << endl << setw(50) << "~~~~~~~~~~~~~~~~~ SHOP - BUY ~~~~~~~~~~~~~~~~~" << endl << endl;
+                SetConsoleTextAttribute(color, 6);
+                cout << setw(15) << "Your gold: " << player.gold << endl << endl;
                 if (items.empty()) {
-                    cout << "No items available to buy." << endl;
-                    cout << "[ESC] Back" << endl;
+                    SetConsoleTextAttribute(color, 15);
+                    cout << setw(30) << "No items available to buy." << endl << endl;
+                    SetConsoleTextAttribute(color, 7);
+                    cout << setw(19) << "[ESC] Exit shop" << endl;
                     if (_getch() == 27) break;
                     continue;
                 }
                 for (size_t i = 0; i < items.size(); ++i) {
-                    cout << "[" << i + 1 << "] " << items[i].name << " (Price: " << items[i].price << ")" << endl;
+                    SetConsoleTextAttribute(color, 15);
+                    cout << setw(5) << "[" << i + 1 << "] " << items[i].name << " (Price: " << items[i].price << ")" << endl;
                 }
-                cout << "[ESC] Back" << endl;
+                SetConsoleTextAttribute(color, 7);
+                cout << endl << setw(19) << "[ESC] Exit shop" << endl;
                 char buyKey = _getch();
                 if (buyKey == 27) break;
                 int idx = buyKey - '1';
@@ -385,41 +418,50 @@ void shop(Player& player) {
                     if (player.gold >= items[idx].price) {
                         player.gold -= items[idx].price;
                         player.addToBackpack(items[idx]);
-                        cout << "You bought " << items[idx].name << "!" << endl;
+                        SetConsoleTextAttribute(color, 15);
+                        cout << endl << setw(15) << "You bought " << items[idx].name << "!" << endl;
                         items.erase(items.begin() + idx);
                     } else {
-                        cout << "Not enough gold!" << endl;
+                        SetConsoleTextAttribute(color, 12);
+                        cout << endl << setw(20) << "Not enough gold!" << endl;
                     }
-                    cout << "Press any key..." << endl;
+                    SetConsoleTextAttribute(color, 15);
+                    cout << setw(20) << "Press any key..." << endl;
                     (void)_getch();
                 }
             }
         } else if (key == 's' || key == 'S') {
             while (true) {
                 system("cls");
-                cout << "Shop - Sell" << endl << "---------------------" << endl;
-                cout << "Your gold: " << player.gold << endl;
+                SetConsoleTextAttribute(color, 14);
+                cout << endl << setw(50) << "~~~~~~~~~~~~~~~~~ SHOP - SELL ~~~~~~~~~~~~~~~~" << endl << endl;
+                SetConsoleTextAttribute(color, 6);
+                cout << setw(15) << "Your gold: " << player.gold << endl << endl;
 
                 vector<size_t> sellableIndices;
-                for (size_t i = 0; i < player.backpack.size(); ++i) {
+                for (size_t i = 0; i < player.backpack.size(); i++) {
                     if (!player.backpack[i].equipped) {
                         sellableIndices.push_back(i);
                     }
                 }
 
                 if (sellableIndices.empty()) {
-                    cout << "No unequipped items to sell in your backpack." << endl;
-                    cout << "[ESC] Back" << endl;
+                    SetConsoleTextAttribute(color, 15);
+                    cout << setw(49) << "No unequipped items to sell in your backpack." << endl << endl;
+                    SetConsoleTextAttribute(color, 7);
+                    cout << setw(19) << "[ESC] Exit shop" << endl;
                     if (_getch() == 27) break;
                     continue;
                 }
 
                 for (size_t i = 0; i < sellableIndices.size(); ++i) {
                     size_t idx = sellableIndices[i];
-                    cout << "[" << i + 1 << "] " << player.backpack[idx].name
+                    SetConsoleTextAttribute(color, 15);
+                    cout << setw(5) << "[" << i + 1 << "] " << player.backpack[idx].name
                          << " (Sell price: " << player.backpack[idx].price / 2 << ")" << endl;
                 }
-                cout << "[ESC] Back" << endl;
+                SetConsoleTextAttribute(color, 7);
+                cout << endl << setw(19) << "[ESC] Exit shop" << endl << endl;
                 char sellKey = _getch();
                 if (sellKey == 27) break;
                 int choice = sellKey - '1';
@@ -427,9 +469,11 @@ void shop(Player& player) {
                     size_t realIdx = sellableIndices[choice];
                     int sellPrice = player.backpack[realIdx].price / 2;
                     player.gold += sellPrice;
-                    cout << "You sold " << player.backpack[realIdx].name << " for " << sellPrice << " gold!" << endl;
+                    SetConsoleTextAttribute(color, 10);
+                    cout << setw(13) << "You sold " << player.backpack[realIdx].name << " for " << sellPrice << " gold!" << endl;
                     player.backpack.erase(player.backpack.begin() + realIdx);
-                    cout << "Press any key..." << endl;
+                    SetConsoleTextAttribute(color, 15);
+                    cout << setw(20) << "Press any key..." << endl;
                     (void)_getch();
                 }
             }
@@ -440,53 +484,56 @@ void shop(Player& player) {
 
 void temple(Player& player) {
     system("cls");
-    cout << "Temple" << endl << "---------------------" << endl;
     if (player.level < 10) {
-        cout << "You need to be at least level 10 to choose a profession." << endl;
-        (void)_getch();
-        system("cls");
-        return;
+        SetConsoleTextAttribute(color, 14);
+        cout << endl << setw(50) << "~~~~~~~~~~~~~~~~~~~~ TEMPLE ~~~~~~~~~~~~~~~~~~~" << endl << endl;
+        cout << setw(36) << "You need to be at least level 10." << endl;
+        SetConsoleTextAttribute(color, 7);
+        cout << endl << setw(23) << "Press [ESC] to back." << endl;
+        char key = _getch();
+        if (key == 27) {
+            system("cls");
+            return;
+        }
     }
     if (player.profession == Profession::None) {
-        cout << "Choose your profession:" << endl;
-        cout << "[1] Warrior" << endl;
-        cout << "[2] Archer" << endl;
-        cout << "[3] Mage" << endl;
+        SetConsoleTextAttribute(color, 14);
+        cout << endl << setw(50) << "~~~~~~~~~~~~~~~~~~~~ TEMPLE ~~~~~~~~~~~~~~~~~~~" << endl << endl;
+        SetConsoleTextAttribute(color, 15);
+        cout << setw(26) << "Choose your profession:" << endl << endl;
+        SetConsoleTextAttribute(color, 12);
+        cout << setw(14) << "[1] Warrior" << endl;
+        SetConsoleTextAttribute(color, 8);
+        cout << setw(13) << "[2] Archer" << endl;
+        SetConsoleTextAttribute(color, 13);
+        cout << setw(11) << "[3] Mage" << endl;
+        SetConsoleTextAttribute(color, 7);
+        cout << endl << setw(23) << "Press [ESC] to back." << endl;
         char key = _getch();
         if (key == '1') player.profession = Profession::Warrior;
         else if (key == '2') player.profession = Profession::Archer;
         else if (key == '3') player.profession = Profession::Mage;
-        else {
-            cout << "Invalid choice." << endl << "Press any key..." << endl;
-            (void)_getch();
+        else if (key == 27) {
             system("cls");
             return;
         }
         player.skills = getSkillsForProfession(player.profession);
-        cout << "You are now a ";
-        switch (player.profession) {
-        case Profession::Warrior: cout << "Warrior"; break;
-        case Profession::Archer: cout << "Archer"; break;
-        case Profession::Mage: cout << "Mage"; break;
-        default: break;
-        }
-        cout << "!" << endl << "Press any key..." << endl;
-        (void)_getch();
         system("cls");
-        return;
     }
-
-    cout << "Skill list:" << endl;
-    for (size_t i = 0; i < player.skills.size(); ++i) {
+    SetConsoleTextAttribute(color, 14);
+    cout << endl << setw(50) << "~~~~~~~~~~~~~~~~~~~~ TEMPLE ~~~~~~~~~~~~~~~~~~~" << endl << endl;
+    for (size_t i = 0; i < player.skills.size(); i++) {
         const Skill& skill = player.skills[i];
-        cout << "[" << i + 1 << "] " << skill.name << " - " << skill.description
+        SetConsoleTextAttribute(color, 15);
+        cout << setw(4) << "[" << i + 1 << "] " << skill.name << " - " << skill.description
             << " (Required level: " << skill.requiredLevel << ") ";
-        if (skill.unlocked) cout << "[UNLOCKED]";
-        else if (player.level >= skill.requiredLevel) cout << "[AVAILABLE]";
-        else cout << "[LOCKED]";
+        if (skill.unlocked) { SetConsoleTextAttribute(color, 10); cout << "[UNLOCKED]"; }
+        else if (player.level >= skill.requiredLevel) { SetConsoleTextAttribute(color, 11); cout << "[AVAILABLE]"; }
+        else { SetConsoleTextAttribute(color, 12); cout << "[LOCKED]"; }
         cout << endl;
     }
-    cout << "Select skill number to unlock or ESC to exit." << endl;
+    SetConsoleTextAttribute(color, 7);
+    cout << endl << setw(23) << "Press [ESC] to back." << endl;
     char key = _getch();
     if (key == 27) {
         system("cls");
@@ -497,13 +544,8 @@ void temple(Player& player) {
         Skill& skill = player.skills[idx];
         if (!skill.unlocked && player.level >= skill.requiredLevel) {
             player.unlockSkill(idx);
-            cout << "Skill unlocked: " << skill.name << "!" << endl;
-        }
-        else if (skill.unlocked) {
-            cout << "Skill already unlocked." << endl;
-        }
-        else {
-            cout << "You need higher level for this skill." << endl;
+            SetConsoleTextAttribute(color, 15);
+            cout << endl << setw(19) << "Skill unlocked: " << skill.name << "!" << endl;
         }
         (void)_getch();
     }
@@ -512,12 +554,19 @@ void temple(Player& player) {
 
 void gameMenu(Player& player) {
     while (true) {
+        SetConsoleTextAttribute(color, 14);
         cout << endl << setw(50) << "~~~~~~~~~~~~~~~~~~ GAME MENU ~~~~~~~~~~~~~~~~~~" << endl << endl;
+		SetConsoleTextAttribute(color, 15);
         cout << setw(28) << "[C] Character Information" << endl;
+		SetConsoleTextAttribute(color, 8);
         cout << setw(15) << "[B] Backpack" << endl;
+		SetConsoleTextAttribute(color, 12);
         cout << setw(12) << "[F] Fight" << endl;
+		SetConsoleTextAttribute(color, 11);
         cout << setw(11) << "[S] Shop" << endl;
+		SetConsoleTextAttribute(color, 13);
         cout << setw(13) << "[T] Temple" << endl;
+		SetConsoleTextAttribute(color, 7);
         cout << setw(26) << "[ESC] Exit to main menu" << endl;
         char key = _getch();
         if (key == 'c' || key == 'C') {
@@ -539,12 +588,14 @@ void gameMenu(Player& player) {
 }
 
 void begin() {
+    SetConsoleTextAttribute(color, 14);
     srand((unsigned)time(nullptr));
     string characterName;
     cout << endl << setw(50) << "~~~~~~~~~~~~~~~~~~ YOUR NAME ~~~~~~~~~~~~~~~~~~" << endl << endl << "   > ";
+    SetConsoleTextAttribute(color, 15);
     cin >> characterName;
     system("cls");
-    Player player(characterName, 10, 100, 30, 10);
+    Player player(characterName, 9, 100, 30, 10);
     gameMenu(player);
 }
 

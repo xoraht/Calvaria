@@ -1,7 +1,10 @@
 #include "Player.h"
+#include <windows.h>
+#include <iomanip>
+#include <conio.h>
 #include <iostream>
 using namespace std;
-
+HANDLE col = GetStdHandle(STD_OUTPUT_HANDLE);
 Player::Player(const string& name, int level, int maxHP, int attack, int armor)
     : Character(name, level, maxHP, attack, armor), exp(0), gold(0),
       baseAttack(attack), baseArmor(armor),
@@ -33,9 +36,10 @@ void Player::levelUp() {
     if (pants && pants->equipped) armor += pants->armorBonus;
     if (boots && boots->equipped) armor += boots->armorBonus;
 
-    cout << "\n*** Level Up! You are now level " << level << " ***\n";
-    cout << "New stats: HP: " << hp << "/" << maxHP
-         << ", Attack: " << attack << ", Armor: " << armor << endl;
+    SetConsoleTextAttribute(col, 13);
+    cout << endl << setw(31) << "Level Up! You are now level " << level << endl;
+    cout << setw(22) << "New stats: Health: " << hp << "/" << maxHP
+         << ", Attack: " << attack << ", Armor: " << armor << endl << endl;
 }
 
 void Player::updateExpToNextLevel() {
